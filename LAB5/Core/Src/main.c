@@ -54,7 +54,8 @@ uint16_t capturedata[CAPTURENUM] = { 0 };
 int32_t DiffTime[CAPTURENUM-1] = { 0 };
 //Mean difftime
 float MeanTime =0;
-float RPM = 0 ;
+int RPM = 0 ;
+uint16_t RPM2 = 0 ;
 uint64_t _micros = 0 ;
 
 /* USER CODE END PV */
@@ -69,6 +70,7 @@ static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 
 void read_RPM();
+void reard_RPM2() ;
 void encoderSpeedReaderCycle();
 uint64_t micros();
 
@@ -127,6 +129,7 @@ int main(void)
   {
 	encoderSpeedReaderCycle();
 	read_RPM();
+	reard_RPM2() ;
 	if(micros()-timestamp > 100000)
 	{
 	timestamp = micros();
@@ -369,15 +372,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void reard_RPM2()
+{
+	double A = 1/64 ;
+	double B = 12*10^-6 ;
+	RPM2 = (((MeanTime*60)/B)*A);
+}
 void read_RPM()
 {
 	//uint32_t T = 0 ;
 	//uint32_t f = 0 ;
-	float PPR = 12*64 ;
-	float T = MeanTime * 0.000001 ;
+	//int PPR = 12*64 ;
+	float T = MeanTime * (0.000001) ;
 	float f = 1/T ;
- 	RPM = (f*60)/PPR ;
+ 	RPM = (f*60)/(12*64) ;
 
 }
 
