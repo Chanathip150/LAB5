@@ -52,10 +52,14 @@ UART_HandleTypeDef huart2;
 uint16_t capturedata[CAPTURENUM] = { 0 };
 //diff time of capture data
 int32_t DiffTime[CAPTURENUM-1] = { 0 };
+uint32_t DiffTime2[CAPTURENUM-1] = { 0 } ;
+
 //Mean difftime
-float MeanTime =0;
+double MeanTime =0;
 int RPM = 0 ;
+int64_t A = 0 ;
 uint16_t RPM2 = 0 ;
+
 uint64_t _micros = 0 ;
 
 /* USER CODE END PV */
@@ -129,7 +133,7 @@ int main(void)
   {
 	encoderSpeedReaderCycle();
 	read_RPM();
-	reard_RPM2() ;
+
 	if(micros()-timestamp > 100000)
 	{
 	timestamp = micros();
@@ -372,27 +376,28 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void reard_RPM2()
-{
-	double A = 1/64 ;
-	double B = 12*10^-6 ;
-	RPM2 = (((MeanTime*60)/B)*A);
-}
+
+//void reard_RPM2()
+//{
+//	double A = 1/64 ;
+//	double B = 12*10^-6 ;
+//	RPM2 = (((MeanTime*60)/B)*A);
+//}
 void read_RPM()
 {
 	//uint32_t T = 0 ;
 	//uint32_t f = 0 ;
 	//int PPR = 12*64 ;
-	float T = MeanTime * (0.000001) ;
-	float f = 1/T ;
- 	RPM = (f*60)/(12*64) ;
+	double T = MeanTime * (0.000001) ; //sec
+	double f = 1/T ;
+	RPM = (f*60)/(12*64) ;
 
 }
 
 void encoderSpeedReaderCycle() {
 	//get DMA Position form number of data
 	uint32_t CapPos =CAPTURENUM -  __HAL_DMA_GET_COUNTER(htim2.hdma[TIM_DMA_ID_CC1]);
-	uint32_t sum = 0 ;
+	int32_t sum = 0 ;
 
 	//calculate diff from all buffer
 	for(register int i=0 ;i < CAPTURENUM-1;i++)
@@ -401,14 +406,20 @@ void encoderSpeedReaderCycle() {
 		//time never go back, but timer can over flow , conpensate that
 		if (DiffTime[i] <0)
 		{
-			DiffTime[i]+= 4294967295;
+			DiffTime[i]=  DiffTime[i] + 4294967295;
 		}
 		//Sum all 15 Diff
 		sum += DiffTime[i];
+
 	}
 
 	//mean all 15 Diff
-	MeanTime =sum / (float)(CAPTURENUM-1);
+	MeanTime =sum / (double)(CAPTURENUM-1);
+	if(MeanTime < 0 )
+	{
+		MeanTime = MeanTime *(-1);
+	}
+
 }
 
 
